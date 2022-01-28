@@ -1,4 +1,4 @@
-import React, { useContext, createContext, ReactNode } from "react";
+import { useContext, createContext, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import useLocalStorage from "../hooks/useLocalStorage";
 
@@ -82,15 +82,15 @@ export const BudgetsProvider = ({
       }))
     );
 
-    setBudgets((prevBudgets) => {
-      return prevBudgets.filter((budget) => budget.id !== id);
-    });
+    setBudgets((prevBudgets) =>
+      prevBudgets.filter((budget) => budget.id !== id)
+    );
   }
 
   function deleteExpense(expenseId: string) {
-    setExpenses((prevExpenses) => {
-      return prevExpenses.filter((expense) => expense.id !== expenseId);
-    });
+    setExpenses((prevExpenses) =>
+      prevExpenses.filter((expense) => expense.id !== expenseId)
+    );
   }
 
   return (
