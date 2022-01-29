@@ -1,112 +1,77 @@
-import { useContext, createContext, ReactNode } from "react";
+import { atom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
 import { v4 as uuidv4 } from "uuid";
-import useLocalStorage from "../hooks/useLocalStorage";
 
 export const UNCATEGORIZED_ID = "UNCATEGORIZED";
 
-type BudgetsContextType = {
-  budgets: Budget[];
-  expenses: Expense[];
+export const budgetAtom = atomWithStorage<Budget[]>("budget", []);
+export const expenseAtom = atomWithStorage<Expense[]>("expenses", []);
+export const totalBudgetAtom = atom(
+  (get) => get(budgetAtom).reduce((total, budget) => total + budget.max, 0)
+);
+export const totalExpensesAtom = atom(
+  (get) => get(expenseAtom).reduce((total, expense) => total + expense.amount, 0)
+);
 
-  getBudgetExpenses: (budgetId: string) => Expense[];
-  getBudgetSum: (budgetId: string) => number;
-
-  addBudget: (name: string, max: number) => void;
-  addExpense: (budgetId: string, description: string, amount: number) => void;
-
-  deleteBudget: (id: string) => void;
-  deleteExpense: (expenseId: string) => void;
-};
-
-const BudgetsContext = createContext<BudgetsContextType>({} as any);
-
-export function useBudgets() {
-  return useContext(BudgetsContext);
+export function getBudgetExpenses(budgetId: string | null) {
+  return atom((get) => get(expenseAtom).filter((expense) => expense.budgetId === budgetId))
 }
 
-export const BudgetsProvider = ({
-  children,
-}: {
-  children: ReactNode | undefined;
-}) => {
-  const [budgets, setBudgets] = useLocalStorage<Budget[]>("budgets", []);
-  const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", []);
+export function getBudgetSum(budgetId: string) {
+  return atom((get) => get(getBudgetExpenses(budgetId)).reduce(
+    (total, expense) => total + expense.amount,
+    0
+  ));
+}
 
-  function getBudgetExpenses(budgetId: string) {
-    return expenses.filter((expense) => expense.budgetId === budgetId);
+export const addBudgetAtom = atom(
+  null, // it's a convention to pass `null` for the first argument
+  (get, set, { name, max }: Omit<Budget, "id">) => {
+    // `update` is any single value we receive for updating this atom
+    set(budgetAtom, [
+      ...get(budgetAtom),
+      {
+        id: uuidv4(),
+        name,
+        max,
+      },
+    ])
+});
+
+export const addExpenseAtom = atom(
+  null, // it's a convention to pass `null` for the first argument
+  (get, set, { budgetId, description, amount }: Omit<Expense, "id">) => {
+    // `update` is any single value we receive for updating this atom
+    set(expenseAtom, [
+      ...get(expenseAtom),
+      {
+        id: uuidv4(),
+        budgetId,
+        description,
+        amount,
+      },
+    ])
+});
+
+export const deleteExpenseAtom = atom(
+  null,
+  (get, set, expenseId: string) => {
+    const prevExpenses = get(expenseAtom);
+    set(expenseAtom, prevExpenses.filter((expense) => expense.id !== expenseId));
   }
+);
 
-  function getBudgetSum(budgetId: string) {
-    return getBudgetExpenses(budgetId).reduce(
-      (total, expense) => total + expense.amount,
-      0
-    );
+export const deleteBudgetAtom = atom(
+  null,
+  (get, set, id: string) => {
+    const prevExpenses = get(expenseAtom);
+    const prevBudgets = get(budgetAtom);
+
+    set(expenseAtom, prevExpenses.map((expense) => ({
+      ...expense,
+      budgetId: expense.budgetId === id ? UNCATEGORIZED_ID : expense.budgetId,
+    })));
+
+    set(budgetAtom, prevBudgets.filter((budget) => budget.id !== id));
   }
-
-  function addBudget(name: string, max: number) {
-    setBudgets((prevBudgets) => {
-      if (prevBudgets.find((budget) => budget.name === name)) {
-        return prevBudgets;
-      }
-
-      return [
-        ...prevBudgets,
-        {
-          id: uuidv4(),
-          name,
-          max,
-        },
-      ];
-    });
-  }
-
-  function addExpense(budgetId: string, description: string, amount: number) {
-    setExpenses((prevExpenses) => {
-      return [
-        ...prevExpenses,
-        {
-          id: uuidv4(),
-          budgetId,
-          description,
-          amount,
-        },
-      ];
-    });
-  }
-
-  function deleteBudget(id: string) {
-    setExpenses((prevExpenses) =>
-      prevExpenses.map((expense) => ({
-        ...expense,
-        budgetId: expense.budgetId === id ? UNCATEGORIZED_ID : expense.budgetId,
-      }))
-    );
-
-    setBudgets((prevBudgets) =>
-      prevBudgets.filter((budget) => budget.id !== id)
-    );
-  }
-
-  function deleteExpense(expenseId: string) {
-    setExpenses((prevExpenses) =>
-      prevExpenses.filter((expense) => expense.id !== expenseId)
-    );
-  }
-
-  return (
-    <BudgetsContext.Provider
-      value={{
-        budgets,
-        expenses,
-        getBudgetExpenses,
-        getBudgetSum,
-        addBudget,
-        addExpense,
-        deleteBudget,
-        deleteExpense,
-      }}
-    >
-      {children}
-    </BudgetsContext.Provider>
-  );
-};
+);

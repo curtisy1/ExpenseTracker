@@ -1,6 +1,7 @@
+import { useAtom } from "jotai";
 import React from "react";
 import { Button, Form, Modal } from "react-bootstrap";
-import { useBudgets } from "../contexts/BudgetContext";
+import { addBudgetAtom } from "../contexts/BudgetContext";
 
 type Props = {
   show: boolean;
@@ -10,11 +11,11 @@ type Props = {
 export default function AddBudgetModal({ show, handleClose }: Props) {
   const nameRef = React.useRef<HTMLInputElement>(null);
   const maxRef = React.useRef<HTMLInputElement>(null);
-  const { addBudget } = useBudgets();
+  const [, addBudget] = useAtom(addBudgetAtom);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    addBudget(nameRef.current!.value, parseFloat(maxRef.current!.value));
+    addBudget({ name: nameRef.current!.value, max: parseFloat(maxRef.current!.value) });
     handleClose();
   }
 

@@ -1,5 +1,12 @@
+import { useAtom } from "jotai";
 import { Button, Modal, Stack } from "react-bootstrap";
-import { UNCATEGORIZED_ID, useBudgets } from "../contexts/BudgetContext";
+import {
+  budgetAtom,
+  deleteBudgetAtom,
+  deleteExpenseAtom,
+  getBudgetExpenses,
+  UNCATEGORIZED_ID
+} from "../contexts/BudgetContext";
 import { currencyFormatter } from "../utils";
 
 type Props = {
@@ -8,10 +15,11 @@ type Props = {
 };
 
 export default function ViewExpensesModal({ budgetId, handleClose }: Props) {
-  const { budgets, getBudgetExpenses, deleteBudget, deleteExpense } =
-    useBudgets();
+  const [budgets] = useAtom(budgetAtom);
+  const [, deleteBudget] = useAtom(deleteBudgetAtom);
+  const [, deleteExpense] = useAtom(deleteExpenseAtom);
+  const [expenses] = useAtom(getBudgetExpenses(budgetId))
 
-  const expenses = budgetId ? getBudgetExpenses(budgetId) : [];
   const budget =
     budgetId === UNCATEGORIZED_ID
       ? { name: "Uncategorized", id: UNCATEGORIZED_ID }

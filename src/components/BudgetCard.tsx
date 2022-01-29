@@ -1,10 +1,11 @@
+import { Atom, useAtom } from "jotai";
 import classNames from "classnames";
 import { Button, Card, ProgressBar, Stack } from "react-bootstrap";
 import { currencyFormatter } from "../utils";
 
 type Props = {
   name: string;
-  amount: number;
+  amountAtom: Atom<number>;
   max?: number;
   gray?: boolean;
   hideButtons?: boolean;
@@ -14,13 +15,15 @@ type Props = {
 
 export default function BudgetCard({
   name,
-  amount,
+  amountAtom,
   max,
   gray,
   hideButtons,
   onAddExpenseClick,
   onViewExpensesClick,
 }: Props) {
+  const [amount] = useAtom(amountAtom);
+
   return (
     <Card
       className={classNames({

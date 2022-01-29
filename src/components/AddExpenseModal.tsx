@@ -1,6 +1,7 @@
+import { useAtom } from "jotai";
 import React from "react";
 import { Button, Form, Modal } from "react-bootstrap";
-import { UNCATEGORIZED_ID, useBudgets } from "../contexts/BudgetContext";
+import { UNCATEGORIZED_ID, addExpenseAtom, budgetAtom } from "../contexts/BudgetContext";
 
 type Props = {
   budgetId: string | null;
@@ -12,15 +13,16 @@ export default function AddExpenseModal({ budgetId, handleClose }: Props) {
   const amountRef = React.useRef<HTMLInputElement>(null);
   const budgetIdRef = React.useRef<HTMLSelectElement>(null);
 
-  const { addExpense, budgets } = useBudgets();
+  const [budgets] = useAtom(budgetAtom);
+  const [, addExpense] = useAtom(addExpenseAtom);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    addExpense(
-      budgetIdRef.current!.value,
-      descriptionRef.current!.value,
-      parseFloat(amountRef.current!.value)
-    );
+    addExpense({
+      budgetId: budgetIdRef.current!.value,
+      description: descriptionRef.current!.value,
+      amount: parseFloat(amountRef.current!.value)
+    });
     handleClose();
   }
 

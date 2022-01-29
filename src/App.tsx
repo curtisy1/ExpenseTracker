@@ -1,3 +1,4 @@
+import { useAtom } from "jotai";
 import { useState } from "react";
 import { Button, Container, Stack } from "react-bootstrap";
 import AddBudgetModal from "./components/AddBudgetModal";
@@ -6,10 +7,10 @@ import BudgetCard from "./components/BudgetCard";
 import TotalBudgetCard from "./components/TotalBudgetCard";
 import UncategorizedBudgetCard from "./components/UncategorizedBudgetCard";
 import ViewExpensesModal from "./components/ViewExpensesModal";
-import { UNCATEGORIZED_ID, useBudgets } from "./contexts/BudgetContext";
+import { budgetAtom, UNCATEGORIZED_ID, getBudgetSum } from "./contexts/BudgetContext";
 
 function App() {
-  const { budgets, getBudgetSum } = useBudgets();
+  const [budgets] = useAtom(budgetAtom);
   const [showAddBudgetModal, setShowAddBudgetModal] = useState(false);
   const [addExpenseBudgetId, setAddExpenseBudgetId] = useState<string | null>(
     null
@@ -45,7 +46,7 @@ function App() {
             <BudgetCard
               key={id}
               name={name}
-              amount={getBudgetSum(id)}
+              amountAtom={getBudgetSum(id)}
               max={max}
               onAddExpenseClick={() => setAddExpenseBudgetId(id)}
               onViewExpensesClick={() => setViewExpensesBudgetId(id)}
